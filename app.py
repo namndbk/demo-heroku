@@ -1,18 +1,20 @@
-from flask import Flask, request, jsonify, render_template, request
-import utils
-import numpy as np
+from flask import Flask
 import pickle
-from simple_naive_bayes import MultinomialNB
+from flask import render_template, request, redirect
+import preprocess
+from tensorflow.keras.models import model_from_json
+import tensorflow as tf
+import numpy as np
+
+
 
 app = Flask(__name__)
 
-
-DICT = utils.load_dict()
-model = pickle.load(open("model.pkl", "rb"))
-
-
-# model = pickle.load(open("addtone.pkl", "rb"))
-
+json_file = open('model.json', 'r')
+loaded_model_json = json_file.read()
+json_file.close()
+model = model_from_json(loaded_model_json)
+model.load_weights("model.h5")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -22,18 +24,13 @@ def predict():
 		return render_template("index.html")
 	else:
 		document = request.form["document"]
-		try:
-			doc = utils.preprocess(document)
-			doc = utils.bag_of_word(doc, DICT)
-			y_pred = model.predict([doc])
-			if int(y_pred[-1]) == 0:
-				label = "positive"
-			else:
-				label = "negative"
-		except:
-			label = "Error !"
-		return render_template("index.html", message=label, document=document)
-
+		document = document.strip()
+		inp = []
+		inp.append(preprocess.encode(document))
+		inp = np.array(inp)
+		y_pred = model.predict(inp)
+		out = preprocess.decode(y_pred[-1])
+		return render_template("index.html", message=out, document=document)
 
 if __name__ == '__main__':
 	app.run()
