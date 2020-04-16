@@ -1,0 +1,10 @@
+{
+	"predict": {
+		"label": "1"
+	},
+	"confidence": {
+		"label_0": 0.1,
+		"label_1": 0.8,
+		"lable_3": 0.1
+	}
+}
